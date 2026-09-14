@@ -16,14 +16,14 @@ RUN --mount=target=/var/cache/apt,type=cache,sharing=locked \
 RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 # upgrade pip and install requirements not in otterwiki
-RUN --mount=type=cache,target=/root/.cache,id=pip-$TARGETPLATFORM \
+RUN --mount=type=cache,target=/root/.cache,id=pip-cache \
     pip install -U pip wheel
 # copy src files
 COPY pyproject.toml MANIFEST.in README.md LICENSE /src/
 WORKDIR /src
 
 # install requirements
-RUN --mount=type=cache,target=/root/.cache,id=pip-$TARGETPLATFORM \
+RUN --mount=type=cache,target=/root/.cache,id=pip-cache \
     python -c 'import tomllib; print("\n".join(tomllib.load(open("./pyproject.toml", "rb"))["project"]["dependencies"]));' > requirements.txt && \
     pip install -r requirements.txt
 
@@ -43,9 +43,9 @@ RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
 # copy the tests
 COPY tests /src/tests
 # install the dev environment
-RUN --mount=type=cache,target=/root/.cache,id=pip-$TARGETPLATFORM \
+RUN --mount=type=cache,target=/root/.cache,id=pip-cache \
     pip install '.[dev]'
-RUN --mount=type=cache,target=/root/.cache,id=pip-$TARGETPLATFORM \
+RUN --mount=type=cache,target=/root/.cache,id=pip-cache \
     tox
 # configure tox as default command when the test-stage is executed
 CMD ["tox"]
